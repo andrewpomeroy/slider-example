@@ -1,6 +1,7 @@
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import useMeasure from 'react-use-measure';
+import { TooltipContent, TooltipTrigger, TooltipProvider, Tooltip } from './ui/tooltip';
 
 const Slider = ({ }) => {
   const initialHeight = 4;
@@ -74,17 +75,24 @@ const Slider = ({ }) => {
             />
           </motion.div>
           {/* Knob */}
-          <motion.div
-            initial={false}
-            style={{
-              x: `calc(${knobTransformX.get()}px - 50%)`,
-            }}
-            className={`absolute left-0 top-50% pointer-events-none origin-center`}
-          > 
-            <div
-              className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center ${hovered || pressed ? "scale-[1]" : "scale-[0]"} transition-all`}
-            />
-          </motion.div>
+          <Tooltip open={hovered}>
+            <TooltipTrigger asChild>
+              <motion.div
+                initial={false}
+                style={{
+                  x: `calc(${knobTransformX.get()}px - 50%)`,
+                }}
+                className={`absolute left-0 top-50% origin-center pointer-events-none`}
+              >
+                <div
+                  className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center ${hovered || pressed ? "scale-[1]" : "scale-[0]"} transition-all`}
+                />
+              </motion.div>
+            </TooltipTrigger>
+            <TooltipContent>
+              sup
+            </TooltipContent>
+          </Tooltip>
         </motion.div>
       </div>
       {/* Label */}
