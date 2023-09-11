@@ -10,7 +10,11 @@ module.exports = {
     extend: {
       colors: {
         gray: colors.stone,
-        primary: "#1CE783",
+        primary: {
+          DEFAULT: "#1CE783",
+          light: "hsl(150.44deg 100% 87.78%)"
+        },
+        // background: "#F5F5F5",
       }
     },
   },

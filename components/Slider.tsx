@@ -3,20 +3,24 @@ import React, { useEffect, useState } from 'react';
 import useMeasure from 'react-use-measure';
 
 const Slider = ({ }) => {
-  let initialHeight = 4;
-  let height = 12;
-  let buffer = 12;
-  let [ref, bounds] = useMeasure();
-  let [hovered, setHovered] = useState(false);
-  let [pressed, setPressed] = useState(false);
-  let progress = useMotionValue(0.5);
-  let width = useTransform(progress, (v) => `${v * 100}%`);
-  let roundedProgress = useTransform(
+  const initialHeight = 4;
+  const height = 12;
+  const buffer = 12;
+  const [ref, bounds] = useMeasure();
+  const [hovered, setHovered] = useState(true);
+  const [pressed, setPressed] = useState(false);
+  const progress = useMotionValue(0.5);
+  const width = useTransform(progress, (v) => `${v * 100}%`);
+  const roundedProgress = useTransform(
     progress,
     (v) => `${roundTo(v * 100, 0)}%`
   );
-  let [progressState, setProgressState] = useState(roundedProgress.get());
-  let state = pressed ? "pressed" : hovered ? "hovered" : "idle";
+  const [progressState, setProgressState] = useState(roundedProgress.get());
+  const state = pressed ? "pressed" : hovered ? "hovered" : "idle";
+  const knobTransformX = useTransform(
+    progress,
+    (v) => v * bounds.width
+  );
 
   useEffect(() => {
     roundedProgress.onChange((v) => setProgressState(v));
@@ -34,7 +38,7 @@ const Slider = ({ }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full">
+    (<div className="flex flex-col items-center justify-center w-full">
       {/* Slider */}
       <div className="flex items-center justify-center w-full">
         <motion.div
@@ -69,6 +73,18 @@ const Slider = ({ }) => {
               className="bg-primary absolute w-[20%] inset-0"
             />
           </motion.div>
+          {/* Knob */}
+          <motion.div
+            initial={false}
+            style={{
+              x: `calc(${knobTransformX.get()}px - 50%)`,
+            }}
+            className={`absolute left-0 top-50% pointer-events-none origin-center`}
+          > 
+            <div
+              className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center ${hovered || pressed ? "scale-[1]" : "scale-[0]"} transition-all`}
+            />
+          </motion.div>
         </motion.div>
       </div>
       {/* Label */}
@@ -82,8 +98,8 @@ const Slider = ({ }) => {
       >
         {progressState}
       </motion.div>
-    </div>
-  )
+    </div>)
+  );
 }
 
 let clamp = (num: number, min: number, max: number) =>
