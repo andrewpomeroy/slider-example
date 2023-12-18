@@ -2,8 +2,10 @@ import { motion, useMotionValue, useTransform } from 'framer-motion';
 import React, { useCallback, useEffect, useState } from 'react';
 import useMeasure from 'react-use-measure';
 import { TooltipContent, TooltipTrigger, TooltipProvider, Tooltip } from './ui/tooltip';
+import { clsx, cn } from '../lib/utils';
+import { twMerge } from 'tailwind-merge';
 
-const TOTAL_TIME = 80000
+const TOTAL_TIME = 80000;
 
 const msToTime = (ms: number) => {
   if (!ms) return "00:00";
@@ -94,8 +96,8 @@ const Slider = ({ }) => {
           onMouseMove={handleMouseMove}
           onPointerEnter={() => setHovered(true)}
           onPointerLeave={() => setHovered(false)}
-          style={{ height: height + buffer }}
-          className="flex w-full items-center justify-center relative touch-none grow-0"
+          style={{ height: height + buffer, paddingTop: buffer, paddingBottom: buffer }}
+          className="flex w-full items-center justify-center relative touch-none cursor-pointer grow-0"
           initial={false}
           ref={ref}
         >
@@ -116,21 +118,23 @@ const Slider = ({ }) => {
             
           </motion.div>
           {/* Pointer-tooltip surrogate */}
-          <Tooltip open={hovered && !knobHovered}>
-            <TooltipTrigger asChild>
-              <motion.div className="absolute left-0 top-0 h-full pointer-events-none" style={{
-                x: tooltipX
-              }} aria-hidden={true}>
-                <motion.div className={`absolute left-[-.5px] top-0 w-[1px] h-full bg-blue-300 ${hovered && !knobHovered ? "opacity-100" : "opacity-0"}`} 
-                />
-              </motion.div>
-            </TooltipTrigger>
-            <TooltipContent asChild className="pointer-events-none">
-              <motion.div>
-                {tooltipContent}
-              </motion.div>
-            </TooltipContent>
-          </Tooltip>
+          <div className="pointer-events-none">
+            <Tooltip open={hovered && !knobHovered && !pressed}>
+              <TooltipTrigger asChild>
+                <motion.div className="absolute left-0 top-0 h-full" style={{
+                  x: tooltipX
+                }} aria-hidden={true}>
+                  <motion.div className={`absolute left-[-.5px] top-0 w-[1px] h-full bg-blue-300 ${hovered && !knobHovered ? "opacity-100" : "opacity-0"}`} 
+                  />
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent asChild>
+                <motion.div>
+                  {tooltipContent}
+                </motion.div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
           {/* Knob */}
           <motion.div
             initial={false}
@@ -142,7 +146,7 @@ const Slider = ({ }) => {
             onMouseLeave={() => setKnobHovered(false)}
           >
             <motion.div
-              className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center transition-all
+              className={`w-4 h-4 m-1 bg-white rounded-full shadow-lg origin-center transition-all
               `}
               // ${hovered || pressed ? "scale-[1]" : "scale-[0]"}
               // variants={{
