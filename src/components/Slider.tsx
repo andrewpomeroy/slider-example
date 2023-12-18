@@ -1,7 +1,20 @@
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import useMeasure from 'react-use-measure';
 import { TooltipContent, TooltipTrigger, TooltipProvider, Tooltip } from './ui/tooltip';
+
+const TOTAL_TIME = 80000
+
+const msToTime = (ms: number) => {
+  if (!ms) return "00:00";
+  if (ms === Infinity) {
+  }
+  return new Date(ms).toISOString().slice(14, -5);
+}
+
+const progressRatioToTime = (progressRatio: number) => {
+  return msToTime(progressRatio * TOTAL_TIME);
+}
 
 const Slider = ({ }) => {
   const initialHeight = 6;
@@ -15,10 +28,9 @@ const Slider = ({ }) => {
   const width = useTransform(progress, (v) => `${v * 100}%`);
   const roundedProgress = useTransform(
     progress,
-    (v) => `${roundTo(v * 100, 0)}%`
+    (v) => progressRatioToTime(v)
   );
-  const [progressState, setProgressState] = useState(roundedProgress.get());
-  const [tooltipValue, setTooltipValue] = useState(roundedProgress.get());
+  const [tooltipContent, setTooltipContent] = useState(roundedProgress.get());
   const state = pressed ? "pressed" : hovered ? "hovered" : "idle";
   const knobTransformX = useTransform(
     progress,
@@ -32,27 +44,38 @@ const Slider = ({ }) => {
   );
 
   useEffect(() => {
-    roundedProgress.onChange((v) => setProgressState(v));
-  }, [roundedProgress]);
-  useEffect(() => {
     mouseX.onChange((v) => {
-      // set tooltip %
-      setTooltipValue(String(roundTo(v / bounds.width, 2)));
-    });
-  })
-
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    console.log("%c💣️ event.nativeEvent.offsetX", "background: aliceblue; color: dodgerblue; font-weight: bold", event.nativeEvent.offsetX);
-    mouseX.set(event.nativeEvent.offsetX);
-    if (pressed) {
-      let newPercent = clamp(
-        event.nativeEvent.offsetX / bounds.width,
+      const progressRatio = clamp(
+        v / bounds.width,
         0,
         1
       );
-      progress.set(newPercent);
+      setTooltipContent(String(progressRatioToTime(progressRatio)));
+    });
+  })
+
+  const getTimelineCursorOffsetX = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    const { clientX } = event.nativeEvent;
+    const { left } = bounds;
+    return clientX - left;
+  }, [bounds]);
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const offsetX = getTimelineCursorOffsetX(event);
+    mouseX.set(offsetX);
+    if (pressed) {
+      setNewProgress(event);
     }
   };
+
+  const setNewProgress = (event: React.MouseEvent<HTMLDivElement>) => {
+    let newPercent = clamp(
+      getTimelineCursorOffsetX(event) / bounds.width,
+      0,
+      1
+    );
+    progress.set(newPercent);
+  }
 
   return (
     (<div className="flex flex-col items-center justify-center w-full">
@@ -60,7 +83,11 @@ const Slider = ({ }) => {
       <div className="relative flex items-center justify-center w-full">
         <motion.div
           animate={state}
-          onMouseDown={() => setPressed(true)}
+          onMouseDown={(event) => {
+            setPressed(true);
+            setNewProgress(event);
+          }}
+          // TODO: onMouseUp doesn't fire when you release the mouse outside the slider
           onMouseUp={() => setPressed(false)}
           onMouseMove={handleMouseMove}
           onPointerEnter={() => setHovered(true)}
@@ -86,34 +113,47 @@ const Slider = ({ }) => {
             />
             
           </motion.div>
+          {/* Pointer-tooltip surrogate */}
+          <Tooltip open={hovered}>
+            <TooltipTrigger asChild>
+              <motion.div className="absolute left-0 top-0 h-full pointer-events-none" style={{
+                x: tooltipX
+              }} aria-hidden={true}>
+                <motion.div className="absolute left-[-.5px] top-0 w-[1px] h-full bg-blue-300" 
+                  variants={{
+                    idle: { opacity: 0 },
+                    hovered: { opacity: 1 },
+                    pressed: { opacity: 0 },
+                  }}
+                />
+              </motion.div>
+            </TooltipTrigger>
+            <TooltipContent asChild className="pointer-events-none">
+              <motion.div>
+                {tooltipContent}
+              </motion.div>
+            </TooltipContent>
+          </Tooltip>
           {/* Knob */}
           <motion.div
             initial={false}
             style={{
               x: `calc(${knobTransformX.get()}px - 50%)`,
             }}
-            className={`absolute left-0 top-50% origin-center pointer-events-none`}
+            className={`absolute left-0 top-50% origin-center ${pressed ? "cursor-grabbing" : "cursor-grab"}`}
           >
-            <div
-              className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center ${hovered || pressed ? "scale-[1]" : "scale-[0]"} transition-all`}
+            <motion.div
+              className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center transition-all
+              `}
+              // ${hovered || pressed ? "scale-[1]" : "scale-[0]"}
+              // variants={{
+              //   idle: { scale: 0 },
+              //   hovered: { scale: 1 },
+              //   pressed: { scale: 1 },
+              // }}
             />
           </motion.div>
         </motion.div>
-        {/* Pointer-tooltip surrogate */}
-        <Tooltip open={hovered}>
-          <TooltipTrigger asChild>
-            <motion.div className="absolute left-0 top-0 pointer-events-none" style={{
-              x: tooltipX
-            }} aria-hidden={true}>
-              <span className="opacity-0">
-                Tooltip surrogate
-              </span>
-            </motion.div>
-          </TooltipTrigger>
-          <TooltipContent className="pointer-events-none">
-            {tooltipValue}
-          </TooltipContent>
-        </Tooltip>
       </div>
       {/* Label */}
       <motion.div
@@ -124,7 +164,7 @@ const Slider = ({ }) => {
         }}
         className={`select-none mt-2 text-center text-sm font-semibold tabular-nums`}
       >
-        {progressState}
+        {roundedProgress.get()}
       </motion.div>
     </div>)
   );

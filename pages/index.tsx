@@ -17,9 +17,6 @@ export default function Page() {
       <TooltipProvider>
         <div className="flex items-center justify-center h-full max-h-[800px] py-16">
           <div className="w-[375px] h-full bg-gray-800 rounded-2xl flex flex-col justify-center px-4">
-            <p className="text-center text-sm font-medium mt-8">
-              iOS 16 Slider demo
-            </p>
             <div className="flex flex-1 flex-col items-center justify-center">
               <Slider />
             </div>
