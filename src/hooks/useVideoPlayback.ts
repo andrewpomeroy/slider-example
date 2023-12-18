@@ -10,6 +10,7 @@ type VideoState = {
   play: () => void;
   pause: () => void;
   tick: (frameTime: number) => void;
+  skipTo: (time: number) => void;
 };
 
 // Create the Zustand store
@@ -36,6 +37,15 @@ const useStore = create<VideoState>((set, get) => ({
       set({ playing: false });
     }
     set({ currentTime });
+  },
+  skipTo: (time: number) => {
+    const { totalDuration } = get();
+    const clampedTime = Math.min(Math.max(time, 0), totalDuration);
+    set({ currentTime: clampedTime });
+    // If the video is playing, adjust the startTime to keep the animation smooth
+    if (get().playing) {
+      set({ startTime: performance.now() - clampedTime });
+    }
   },
 }));
 
@@ -78,6 +88,7 @@ function useVideoPlayback(initialTime: number, totalDuration: number) {
     pause: state.pause,
     playing: state.playing,
     currentTime: state.currentTime,
+    skipTo: state.skipTo,
   };
 }
 

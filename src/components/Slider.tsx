@@ -28,7 +28,7 @@ const Slider = ({ }) => {
   const [knobHovered, setKnobHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
   const mouseX = useMotionValue(0);
-  const { play, pause, playing, currentTime } = useVideoPlayback(0, TOTAL_TIME);
+  const { play, pause, playing, currentTime, skipTo } = useVideoPlayback(0, TOTAL_TIME);
   const [tooltipContent, setTooltipContent] = useState(msToTime(currentTime));
   const state = pressed ? "pressed" : hovered ? "hovered" : "idle";
     const tooltipX = useTransform(
@@ -68,18 +68,18 @@ const Slider = ({ }) => {
     const offsetX = getTimelineCursorOffsetX(event);
     mouseX.set(offsetX);
     if (pressed) {
-      // setNewProgress(event);
+      setNewProgress(event);
     }
   };
 
-  // const setNewProgress = (event: React.MouseEvent<HTMLDivElement>) => {
-  //   let newPercent = clamp(
-  //     getTimelineCursorOffsetX(event) / bounds.width,
-  //     0,
-  //     1
-  //   );
-  //   progress.set(newPercent);
-  // }
+  const setNewProgress = (event: React.MouseEvent<HTMLDivElement>) => {
+    let newPercent = clamp(
+      getTimelineCursorOffsetX(event) / bounds.width,
+      0,
+      1
+    );
+    skipTo(newPercent * TOTAL_TIME);
+  }
 
   return (
     (<div className="flex flex-col items-center justify-center w-full">
@@ -90,7 +90,7 @@ const Slider = ({ }) => {
           onMouseDown={(event) => {
             event.preventDefault();
             setPressed(true);
-            // setNewProgress(event);
+            setNewProgress(event);
           }}
           // TODO: onMouseUp doesn't fire when you release the mouse outside the slider
           onMouseUp={() => setPressed(false)}
