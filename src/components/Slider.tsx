@@ -21,11 +21,13 @@ const Slider = ({ }) => {
   const state = pressed ? "pressed" : hovered ? "hovered" : "idle";
   const knobTransformX = useTransform(
     progress,
-    (v) => v * bounds.width
+    (v) => v * bounds.width 
   );
   const tooltipX = useTransform(
     mouseX,
-    (v) => v
+    (v) => {
+      return `calc(${v}px - 50%)`
+    }
   );
 
   useEffect(() => {
@@ -48,7 +50,7 @@ const Slider = ({ }) => {
   return (
     (<div className="flex flex-col items-center justify-center w-full">
       {/* Slider */}
-      <div className="flex items-center justify-center w-full">
+      <div className="relative flex items-center justify-center w-full">
         <motion.div
           animate={state}
           onMouseDown={() => setPressed(true)}
@@ -57,12 +59,7 @@ const Slider = ({ }) => {
           onPointerEnter={() => setHovered(true)}
           onPointerLeave={() => setHovered(false)}
           style={{ height: height + buffer }}
-          className="flex items-center justify-center relative touch-none grow-0"
-          variants={{
-            idle: { width: "calc(100% - 48px)" },
-            hovered: { width: "calc(100% - 48px)" },
-            pressed: { width: "calc(100% - 48px)" },
-          }}
+          className="flex w-full items-center justify-center relative touch-none grow-0"
           initial={false}
           ref={ref}
         >
@@ -80,27 +77,36 @@ const Slider = ({ }) => {
               style={{ width }}
               className="bg-primary absolute w-[20%] inset-0"
             />
+            
           </motion.div>
           {/* Knob */}
-          <Tooltip open={hovered}>
-            <TooltipTrigger asChild>
-              <motion.div
-                initial={false}
-                style={{
-                  x: `calc(${knobTransformX.get()}px - 50%)`,
-                }}
-                className={`absolute left-0 top-50% origin-center pointer-events-none`}
-              >
-                <div
-                  className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center ${hovered || pressed ? "scale-[1]" : "scale-[0]"} transition-all`}
-                />
-              </motion.div>
-            </TooltipTrigger>
-            <TooltipContent>
-              sup
-            </TooltipContent>
-          </Tooltip>
+          <motion.div
+            initial={false}
+            style={{
+              x: `calc(${knobTransformX.get()}px - 50%)`,
+            }}
+            className={`absolute left-0 top-50% origin-center pointer-events-none`}
+          >
+            <div
+              className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center ${hovered || pressed ? "scale-[1]" : "scale-[0]"} transition-all`}
+            />
+          </motion.div>
         </motion.div>
+        {/* Pointer-tooltip surrogate */}
+        <Tooltip open={hovered}>
+          <TooltipTrigger asChild>
+            <motion.div className="absolute left-0 top-0 pointer-events-none" style={{
+              x: tooltipX
+            }} aria-hidden={true}>
+              <span className="opacity-0">
+                Tooltip surrogate
+              </span>
+            </motion.div>
+          </TooltipTrigger>
+          <TooltipContent className="pointer-events-none">
+            sup
+          </TooltipContent>
+        </Tooltip>
       </div>
       {/* Label */}
       <motion.div
