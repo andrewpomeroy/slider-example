@@ -10,8 +10,6 @@ import Slider from "../src/components/Slider";
 import { TooltipProvider } from "../src/components/ui/tooltip";
 
 export default function Page() {
-
-
   return (
     <MotionConfig transition={transition}>
       <TooltipProvider>

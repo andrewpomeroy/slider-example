@@ -85,6 +85,7 @@ const Slider = ({ }) => {
         <motion.div
           animate={state}
           onMouseDown={(event) => {
+            event.preventDefault();
             setPressed(true);
             setNewProgress(event);
           }}
