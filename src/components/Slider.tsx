@@ -18,6 +18,7 @@ const Slider = ({ }) => {
     (v) => `${roundTo(v * 100, 0)}%`
   );
   const [progressState, setProgressState] = useState(roundedProgress.get());
+  const [tooltipValue, setTooltipValue] = useState(roundedProgress.get());
   const state = pressed ? "pressed" : hovered ? "hovered" : "idle";
   const knobTransformX = useTransform(
     progress,
@@ -33,6 +34,12 @@ const Slider = ({ }) => {
   useEffect(() => {
     roundedProgress.onChange((v) => setProgressState(v));
   }, [roundedProgress]);
+  useEffect(() => {
+    mouseX.onChange((v) => {
+      // set tooltip %
+      setTooltipValue(String(roundTo(v / bounds.width, 2)));
+    });
+  })
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     console.log("%c💣️ event.nativeEvent.offsetX", "background: aliceblue; color: dodgerblue; font-weight: bold", event.nativeEvent.offsetX);
@@ -104,7 +111,7 @@ const Slider = ({ }) => {
             </motion.div>
           </TooltipTrigger>
           <TooltipContent className="pointer-events-none">
-            sup
+            {tooltipValue}
           </TooltipContent>
         </Tooltip>
       </div>
