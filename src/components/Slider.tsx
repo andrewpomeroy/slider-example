@@ -22,6 +22,7 @@ const Slider = ({ }) => {
   const buffer = 12;
   const [ref, bounds] = useMeasure();
   const [hovered, setHovered] = useState(false);
+  const [knobHovered, setKnobHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
   const progress = useMotionValue(0.5);
   const mouseX = useMotionValue(0);
@@ -114,17 +115,12 @@ const Slider = ({ }) => {
             
           </motion.div>
           {/* Pointer-tooltip surrogate */}
-          <Tooltip open={hovered}>
+          <Tooltip open={hovered && !knobHovered}>
             <TooltipTrigger asChild>
               <motion.div className="absolute left-0 top-0 h-full pointer-events-none" style={{
                 x: tooltipX
               }} aria-hidden={true}>
-                <motion.div className="absolute left-[-.5px] top-0 w-[1px] h-full bg-blue-300" 
-                  variants={{
-                    idle: { opacity: 0 },
-                    hovered: { opacity: 1 },
-                    pressed: { opacity: 0 },
-                  }}
+                <motion.div className={`absolute left-[-.5px] top-0 w-[1px] h-full bg-blue-300 ${hovered && !knobHovered ? "opacity-100" : "opacity-0"}`} 
                 />
               </motion.div>
             </TooltipTrigger>
@@ -141,6 +137,8 @@ const Slider = ({ }) => {
               x: `calc(${knobTransformX.get()}px - 50%)`,
             }}
             className={`absolute left-0 top-50% origin-center ${pressed ? "cursor-grabbing" : "cursor-grab"}`}
+            onMouseEnter={() => setKnobHovered(true)}
+            onMouseLeave={() => setKnobHovered(false)}
           >
             <motion.div
               className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center transition-all
