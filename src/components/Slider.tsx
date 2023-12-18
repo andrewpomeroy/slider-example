@@ -4,6 +4,7 @@ import useMeasure from 'react-use-measure';
 import { TooltipContent, TooltipTrigger, TooltipProvider, Tooltip } from './ui/tooltip';
 import { clsx, cn } from '../lib/utils';
 import { twMerge } from 'tailwind-merge';
+import useVideoPlayback from '../hooks/useVideoPlayback';
 
 const TOTAL_TIME = 80000;
 
@@ -26,26 +27,26 @@ const Slider = ({ }) => {
   const [hovered, setHovered] = useState(false);
   const [knobHovered, setKnobHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
-  const progress = useMotionValue(0.5);
   const mouseX = useMotionValue(0);
-  const width = useTransform(progress, (v) => `${v * 100}%`);
-  const roundedProgress = useTransform(
-    progress,
-    (v) => progressRatioToTime(v)
-  );
-  const [tooltipContent, setTooltipContent] = useState(roundedProgress.get());
+  const { play, pause, playing, currentTime } = useVideoPlayback(0, TOTAL_TIME);
+  const [tooltipContent, setTooltipContent] = useState(msToTime(currentTime));
   const state = pressed ? "pressed" : hovered ? "hovered" : "idle";
-  const knobTransformX = useTransform(
-    progress,
-    (v) => v * bounds.width 
-  );
-  const tooltipX = useTransform(
-    mouseX,
-    (v) => {
-      return `calc(${v}px - 50%)`
-    }
-  );
-
+    const tooltipX = useTransform(
+      mouseX,
+      (v) => {
+        return `calc(${v}px - 50%)`
+      }
+      );
+  const progress = currentTime / TOTAL_TIME;
+  const currentTimeDisplay = progressRatioToTime(progress);
+  const width = `${progress * 100}%`;
+  const knobTransformX = progress * bounds.width;
+  // const width = useTransform(currentTime, (v) => `${v * 100}%`);
+  // const knobTransformX = useTransform(
+  //   progress,
+  //   (v) => v * bounds.width
+  // );
+  
   useEffect(() => {
     mouseX.onChange((v) => {
       const progressRatio = clamp(
@@ -67,18 +68,18 @@ const Slider = ({ }) => {
     const offsetX = getTimelineCursorOffsetX(event);
     mouseX.set(offsetX);
     if (pressed) {
-      setNewProgress(event);
+      // setNewProgress(event);
     }
   };
 
-  const setNewProgress = (event: React.MouseEvent<HTMLDivElement>) => {
-    let newPercent = clamp(
-      getTimelineCursorOffsetX(event) / bounds.width,
-      0,
-      1
-    );
-    progress.set(newPercent);
-  }
+  // const setNewProgress = (event: React.MouseEvent<HTMLDivElement>) => {
+  //   let newPercent = clamp(
+  //     getTimelineCursorOffsetX(event) / bounds.width,
+  //     0,
+  //     1
+  //   );
+  //   progress.set(newPercent);
+  // }
 
   return (
     (<div className="flex flex-col items-center justify-center w-full">
@@ -89,7 +90,7 @@ const Slider = ({ }) => {
           onMouseDown={(event) => {
             event.preventDefault();
             setPressed(true);
-            setNewProgress(event);
+            // setNewProgress(event);
           }}
           // TODO: onMouseUp doesn't fire when you release the mouse outside the slider
           onMouseUp={() => setPressed(false)}
@@ -136,10 +137,9 @@ const Slider = ({ }) => {
             </Tooltip>
           </div>
           {/* Knob */}
-          <motion.div
-            initial={false}
+          <div
             style={{
-              x: `calc(${knobTransformX.get()}px - 50%)`,
+              transform: `translateX(calc(${knobTransformX}px - 50%))`,
             }}
             className={`absolute left-0 top-50% origin-center ${pressed ? "cursor-grabbing" : "cursor-grab"}`}
             onMouseEnter={() => setKnobHovered(true)}
@@ -155,10 +155,10 @@ const Slider = ({ }) => {
               //   pressed: { scale: 1 },
               // }}
             />
-          </motion.div>
+          </div>
         </motion.div>
       </div>
-      {/* Label */}
+      {/* Current time */}
       <motion.div
         initial={false}
         animate={{
@@ -167,8 +167,11 @@ const Slider = ({ }) => {
         }}
         className={`select-none mt-2 text-center text-sm font-semibold tabular-nums`}
       >
-        {roundedProgress.get()}
+        {currentTimeDisplay} / {msToTime(TOTAL_TIME)}
       </motion.div>
+      <button className="mt-2" onClick={() => playing ? pause() : play()}>
+        {playing ? "Pause" : "Play"}
+      </button>
     </div>)
   );
 }
