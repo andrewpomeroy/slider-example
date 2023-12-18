@@ -1,9 +1,7 @@
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import React, { useCallback, useEffect, useState } from 'react';
 import useMeasure from 'react-use-measure';
-import { TooltipContent, TooltipTrigger, TooltipProvider, Tooltip } from './ui/tooltip';
-import { clsx, cn } from '../lib/utils';
-import { twMerge } from 'tailwind-merge';
+import { TooltipContent, TooltipTrigger, Tooltip } from './ui/tooltip';
 import useVideoPlayback from '../hooks/useVideoPlayback';
 
 const TOTAL_TIME = 80000;

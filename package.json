@@ -13,7 +13,6 @@
     "@radix-ui/react-tooltip": "^1.0.6",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
-    "eslint": "8.29.0",
     "eslint-config-next": "13.0.6",
     "framer-motion": "^6.5.1",
     "lucide-react": "^0.276.0",
@@ -31,6 +30,7 @@
     "@types/react": "17.0.46",
     "@types/react-dom": "17",
     "autoprefixer": "^10.4.13",
+    "eslint": "^8.56.0",
     "postcss": "^8.4.19",
     "prettier": "2.8.1",
     "tailwindcss": "^3.2.4"
