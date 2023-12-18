@@ -20,9 +20,11 @@ const useStore = create<VideoState>((set, get) => ({
   startTime: 0,
   totalDuration: 0,
   play: () => {
-    const { playing, currentTime } = get();
+    const { playing, currentTime, totalDuration, skipTo } = get();
     if (!playing) {
+      const atEnd = currentTime === totalDuration;
       set({ playing: true, startTime: performance.now() - currentTime });
+      if (atEnd) skipTo(0);
     }
   },
   pause: () => {
