@@ -8,9 +8,10 @@ const Slider = ({ }) => {
   const height = 10;
   const buffer = 12;
   const [ref, bounds] = useMeasure();
-  const [hovered, setHovered] = useState(true);
+  const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
   const progress = useMotionValue(0.5);
+  const mouseX = useMotionValue(0);
   const width = useTransform(progress, (v) => `${v * 100}%`);
   const roundedProgress = useTransform(
     progress,
@@ -22,12 +23,18 @@ const Slider = ({ }) => {
     progress,
     (v) => v * bounds.width
   );
+  const tooltipX = useTransform(
+    mouseX,
+    (v) => v
+  );
 
   useEffect(() => {
     roundedProgress.onChange((v) => setProgressState(v));
   }, [roundedProgress]);
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    console.log("%c💣️ event.nativeEvent.offsetX", "background: aliceblue; color: dodgerblue; font-weight: bold", event.nativeEvent.offsetX);
+    mouseX.set(event.nativeEvent.offsetX);
     if (pressed) {
       let newPercent = clamp(
         event.nativeEvent.offsetX / bounds.width,
@@ -75,6 +82,8 @@ const Slider = ({ }) => {
             />
           </motion.div>
           {/* Knob */}
+          <Tooltip open={hovered}>
+            <TooltipTrigger asChild>
               <motion.div
                 initial={false}
                 style={{
@@ -86,6 +95,11 @@ const Slider = ({ }) => {
                   className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center ${hovered || pressed ? "scale-[1]" : "scale-[0]"} transition-all`}
                 />
               </motion.div>
+            </TooltipTrigger>
+            <TooltipContent>
+              sup
+            </TooltipContent>
+          </Tooltip>
         </motion.div>
       </div>
       {/* Label */}
