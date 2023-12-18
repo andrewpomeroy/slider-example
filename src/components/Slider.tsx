@@ -4,8 +4,8 @@ import useMeasure from 'react-use-measure';
 import { TooltipContent, TooltipTrigger, TooltipProvider, Tooltip } from './ui/tooltip';
 
 const Slider = ({ }) => {
-  const initialHeight = 4;
-  const height = 12;
+  const initialHeight = 6;
+  const height = 10;
   const buffer = 12;
   const [ref, bounds] = useMeasure();
   const [hovered, setHovered] = useState(false);
@@ -22,6 +22,10 @@ const Slider = ({ }) => {
   const knobTransformX = useTransform(
     progress,
     (v) => v * bounds.width
+  );
+  const tooltipX = useTransform(
+    mouseX,
+    (v) => v
   );
 
   useEffect(() => {
@@ -55,7 +59,7 @@ const Slider = ({ }) => {
           style={{ height: height + buffer }}
           className="flex items-center justify-center relative touch-none grow-0"
           variants={{
-            idle: { width: "calc(95% - 48px)" },
+            idle: { width: "calc(100% - 48px)" },
             hovered: { width: "calc(100% - 48px)" },
             pressed: { width: "calc(100% - 48px)" },
           }}
@@ -92,7 +96,7 @@ const Slider = ({ }) => {
             </motion.div>
           {/* Pointer-tooltip surrogate */}
           <motion.div className="absolute left-0 top-0 w-full h-full pointer-events-none" style={{
-            x: mouseX.get()
+            x: tooltipX
           }}>
             tooltip
           </motion.div>
