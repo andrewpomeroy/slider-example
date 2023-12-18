@@ -1,7 +1,20 @@
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import useMeasure from 'react-use-measure';
 import { TooltipContent, TooltipTrigger, TooltipProvider, Tooltip } from './ui/tooltip';
+
+const TOTAL_TIME = 80000
+
+const msToTime = (ms: number) => {
+  if (!ms) return "00:00";
+  if (ms === Infinity) {
+  }
+  return new Date(ms).toISOString().slice(14, -5);
+}
+
+const progressRatioToTime = (progressRatio: number) => {
+  return msToTime(progressRatio * TOTAL_TIME);
+}
 
 const Slider = ({ }) => {
   const initialHeight = 6;
@@ -9,60 +22,79 @@ const Slider = ({ }) => {
   const buffer = 12;
   const [ref, bounds] = useMeasure();
   const [hovered, setHovered] = useState(false);
+  const [knobHovered, setKnobHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
   const progress = useMotionValue(0.5);
   const mouseX = useMotionValue(0);
   const width = useTransform(progress, (v) => `${v * 100}%`);
   const roundedProgress = useTransform(
     progress,
-    (v) => `${roundTo(v * 100, 0)}%`
+    (v) => progressRatioToTime(v)
   );
-  const [progressState, setProgressState] = useState(roundedProgress.get());
+  const [tooltipContent, setTooltipContent] = useState(roundedProgress.get());
   const state = pressed ? "pressed" : hovered ? "hovered" : "idle";
   const knobTransformX = useTransform(
     progress,
-    (v) => v * bounds.width
+    (v) => v * bounds.width 
   );
   const tooltipX = useTransform(
     mouseX,
-    (v) => v
+    (v) => {
+      return `calc(${v}px - 50%)`
+    }
   );
 
   useEffect(() => {
-    roundedProgress.onChange((v) => setProgressState(v));
-  }, [roundedProgress]);
-
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    console.log("%c💣️ event.nativeEvent.offsetX", "background: aliceblue; color: dodgerblue; font-weight: bold", event.nativeEvent.offsetX);
-    mouseX.set(event.nativeEvent.offsetX);
-    if (pressed) {
-      let newPercent = clamp(
-        event.nativeEvent.offsetX / bounds.width,
+    mouseX.onChange((v) => {
+      const progressRatio = clamp(
+        v / bounds.width,
         0,
         1
       );
-      progress.set(newPercent);
+      setTooltipContent(String(progressRatioToTime(progressRatio)));
+    });
+  })
+
+  const getTimelineCursorOffsetX = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    const { clientX } = event.nativeEvent;
+    const { left } = bounds;
+    return clientX - left;
+  }, [bounds]);
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const offsetX = getTimelineCursorOffsetX(event);
+    mouseX.set(offsetX);
+    if (pressed) {
+      setNewProgress(event);
     }
   };
+
+  const setNewProgress = (event: React.MouseEvent<HTMLDivElement>) => {
+    let newPercent = clamp(
+      getTimelineCursorOffsetX(event) / bounds.width,
+      0,
+      1
+    );
+    progress.set(newPercent);
+  }
 
   return (
     (<div className="flex flex-col items-center justify-center w-full">
       {/* Slider */}
-      <div className="flex items-center justify-center w-full">
+      <div className="relative flex items-center justify-center w-full">
         <motion.div
           animate={state}
-          onMouseDown={() => setPressed(true)}
+          onMouseDown={(event) => {
+            setPressed(true);
+            setNewProgress(event);
+          }}
+          // TODO: onMouseUp doesn't fire when you release the mouse outside the slider
           onMouseUp={() => setPressed(false)}
           onMouseMove={handleMouseMove}
           onPointerEnter={() => setHovered(true)}
           onPointerLeave={() => setHovered(false)}
           style={{ height: height + buffer }}
-          className="flex items-center justify-center relative touch-none grow-0"
-          variants={{
-            idle: { width: "calc(100% - 48px)" },
-            hovered: { width: "calc(100% - 48px)" },
-            pressed: { width: "calc(100% - 48px)" },
-          }}
+          className="flex w-full items-center justify-center relative touch-none grow-0"
           initial={false}
           ref={ref}
         >
@@ -80,26 +112,45 @@ const Slider = ({ }) => {
               style={{ width }}
               className="bg-primary absolute w-[20%] inset-0"
             />
+            
           </motion.div>
-          {/* Knob */}
-          <Tooltip open={hovered}>
+          {/* Pointer-tooltip surrogate */}
+          <Tooltip open={hovered && !knobHovered}>
             <TooltipTrigger asChild>
-              <motion.div
-                initial={false}
-                style={{
-                  x: `calc(${knobTransformX.get()}px - 50%)`,
-                }}
-                className={`absolute left-0 top-50% origin-center pointer-events-none`}
-              >
-                <div
-                  className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center ${hovered || pressed ? "scale-[1]" : "scale-[0]"} transition-all`}
+              <motion.div className="absolute left-0 top-0 h-full pointer-events-none" style={{
+                x: tooltipX
+              }} aria-hidden={true}>
+                <motion.div className={`absolute left-[-.5px] top-0 w-[1px] h-full bg-blue-300 ${hovered && !knobHovered ? "opacity-100" : "opacity-0"}`} 
                 />
               </motion.div>
             </TooltipTrigger>
-            <TooltipContent>
-              sup
+            <TooltipContent asChild className="pointer-events-none">
+              <motion.div>
+                {tooltipContent}
+              </motion.div>
             </TooltipContent>
           </Tooltip>
+          {/* Knob */}
+          <motion.div
+            initial={false}
+            style={{
+              x: `calc(${knobTransformX.get()}px - 50%)`,
+            }}
+            className={`absolute left-0 top-50% origin-center ${pressed ? "cursor-grabbing" : "cursor-grab"}`}
+            onMouseEnter={() => setKnobHovered(true)}
+            onMouseLeave={() => setKnobHovered(false)}
+          >
+            <motion.div
+              className={`w-4 h-4  bg-white rounded-full shadow-lg origin-center transition-all
+              `}
+              // ${hovered || pressed ? "scale-[1]" : "scale-[0]"}
+              // variants={{
+              //   idle: { scale: 0 },
+              //   hovered: { scale: 1 },
+              //   pressed: { scale: 1 },
+              // }}
+            />
+          </motion.div>
         </motion.div>
       </div>
       {/* Label */}
@@ -111,7 +162,7 @@ const Slider = ({ }) => {
         }}
         className={`select-none mt-2 text-center text-sm font-semibold tabular-nums`}
       >
-        {progressState}
+        {roundedProgress.get()}
       </motion.div>
     </div>)
   );
