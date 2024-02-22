@@ -39,11 +39,6 @@ const Slider = ({ }) => {
   const currentTimeDisplay = progressRatioToTime(progress);
   const width = `${progress * 100}%`;
   const knobTransformX = progress * bounds.width;
-  // const width = useTransform(currentTime, (v) => `${v * 100}%`);
-  // const knobTransformX = useTransform(
-  //   progress,
-  //   (v) => v * bounds.width
-  // );
   
   useEffect(() => {
     mouseX.onChange((v) => {
@@ -146,12 +141,6 @@ const Slider = ({ }) => {
             <motion.div
               className={`w-4 h-4 m-1 bg-white rounded-full shadow-lg origin-center transition-all
               `}
-              // ${hovered || pressed ? "scale-[1]" : "scale-[0]"}
-              // variants={{
-              //   idle: { scale: 0 },
-              //   hovered: { scale: 1 },
-              //   pressed: { scale: 1 },
-              // }}
             />
           </div>
         </motion.div>
