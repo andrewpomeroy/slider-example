@@ -1,14 +1,16 @@
 /** @type {import('tailwindcss').Config} */
-const colors = require('tailwindcss/colors');
+const colors = require("tailwindcss/colors");
+const { trackHeightCn, hoverTrackHeightCn } = require("./src/constants");
 
 module.exports = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
-	],
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
+  safelist: ["top-[50%]", trackHeightCn, hoverTrackHeightCn],
   theme: {
     container: {
       center: true,
@@ -55,7 +57,9 @@ module.exports = {
         gray: colors.stone,
         primary: {
           DEFAULT: "#1CE783",
-          light: "hsl(150.44deg 100% 87.78%)"
+          // light: "hsl(150.44deg 100% 87.78%)",
+          // light: "hsl(150.44deg 100% 87.78%)",
+          // DEFAULT: "rgba(28, 231, 131, .2)",
         },
         // background: "#F5F5F5",
       },
@@ -81,4 +85,4 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
+};
